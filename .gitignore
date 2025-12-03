@@ -1,0 +1,14 @@
+# 忽略 Docker 数据卷 (绝对不能传)
+data/
+
+# 忽略 IDEA 的配置文件夹
+.idea/
+*.iml
+
+# 忽略 Java 编译产物
+target/
+*.class
+
+# 忽略系统文件
+.DS_Store
+Thumbs.db

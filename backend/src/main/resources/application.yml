@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/campus_market?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: AccyCx
+    password: ycy0050307 # ?? docker-compose ????
+
+  # API ????
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs # ????????????????? JSON ??
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html # ??????

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # --- 1. 数据库 MySQL ---
+  mysql:
+    image: mysql:8.0
+    container_name: campus-mysql
+    restart: always
+    environment:
+      # 1. 必须保留 root 密码（作为超级管理员备用），你可以也改成一样的，或者设简单点
+      MYSQL_ROOT_PASSWORD: root 
+      
+      # 2. 默认创建的数据库名
+      MYSQL_DATABASE: campus_market 
+      
+      # 3. 这里配置你的自定义用户名 (注意字段名是 MYSQL_USER)
+      MYSQL_USER: AccyCx
+      
+      # 4. 这里配置你的自定义密码 (注意字段名是 MYSQL_PASSWORD)
+      MYSQL_PASSWORD: ycy0050307
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      - ./config/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql # (可选)初始化脚本
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # --- 2. 缓存 Redis ---
+  redis:
+    image: redis:7.0-alpine
+    container_name: campus-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass root --appendonly yes # 密码设为 root，开启持久化
+    volumes:
+      - ./data/redis:/data
+
+  # --- RocketMQ 和 ElasticSearch 先注释掉，等讲到那个阶段再开启，节省内存 ---
+  # 后续我们会在这里添加 broker, nameserver, kibana 等配置
