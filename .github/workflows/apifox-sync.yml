@@ -80,7 +80,7 @@ jobs:
           # 这会告诉 Apifox 服务器：我传的是 JSON，请解析它！不要忽略它！
           curl --location --request POST "https://api.apifox.cn/v1/projects/${{ secrets.APIFOX_PROJECT_ID }}/import-openapi" \
           --header "Authorization: Bearer ${{ secrets.APIFOX_TOKEN }}" \
-          --header " X-Apifox-Version: 2024-03-28" \
+          --header "X-Apifox-Version: 2024-03-28" \
           --form "file=@openapi.json;type=application/json" \
           --form "options={\"overwrite\":true}" \
           --fail 
