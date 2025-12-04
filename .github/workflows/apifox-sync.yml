@@ -74,15 +74,33 @@ jobs:
       - name: Upload to Apifox
         working-directory: ./backend
         run: |
-          echo "🚀 Uploading to Apifox via curl..."
+          # 1. 安装必要的 Python 库
+          pip install requests
           
-          # 【关键修改】在文件名后面加上 ;type=application/json
-          # 这会告诉 Apifox 服务器：我传的是 JSON，请解析它！不要忽略它！
-          curl --location --request POST "https://api.apifox.cn/v1/projects/${{ secrets.APIFOX_PROJECT_ID }}/import-openapi" \
-          --header "Authorization: Bearer ${{ secrets.APIFOX_TOKEN }}" \
-          --header "X-Apifox-Version: 2024-03-28" \
-          --form "file=@openapi.json;type=application/json" \
-          --form "options={\"overwrite\":true}" \
-          --fail 
+          # 2. 运行 Python 脚本进行上传 (这样写绝对不会有格式问题)
+          python -c "
+          import requests, os, sys
           
-          echo "🎉 Upload finished successfully!"
+          # 准备参数
+          url = 'https://api.apifox.cn/v1/projects/' + os.environ['APIFOX_PROJECT_ID'] + '/import-openapi'
+          headers = {'Authorization': 'Bearer ' + os.environ['APIFOX_TOKEN'], 'X-Apifox-Version': '2024-03-28'}
+          
+          try:
+              # 打开文件并强行指定 MIME 类型为 application/json
+              with open('openapi.json', 'rb') as f:
+                  files = {'file': ('openapi.json', f, 'application/json')}
+                  data = {'options': '{\"overwrite\":true}'}
+          
+                  print('🚀 Uploading via Python...')
+                  res = requests.post(url, headers=headers, files=files, data=data)
+                  print('Response:', res.text)
+          
+                  # 检查结果：只有 createCount 或 updateCount 大于 0 才算真正成功
+                  if res.status_code == 200 and ('\"createCount\":0' not in res.text or '\"updateCount\":0' not in res.text):
+                      print('✅ Success! Apifox updated.')
+                  else:
+                      print('⚠️ Uploaded but no changes detected. Check if code really changed.')
+          except Exception as e:
+              print('❌ Error:', e)
+              sys.exit(1)
+          "
