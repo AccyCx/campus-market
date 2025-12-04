@@ -48,15 +48,20 @@ jobs:
       - name: Generate OpenAPI JSON
         working-directory: ./backend # 进入后端目录
         run: |
-          # 后台启动应用，忽略测试 ( & 表示后台运行 )
-          mvn spring-boot:run -Dspring-boot.run.profiles=dev -Dmaven.test.skip=true &
-          
-          # 循环等待服务启动（每 5 秒试一次，最多试 30 次）
+          # 1. 【核心修改】加上 clean，强制清除旧文件，确保编译的是最新代码
+          mvn clean spring-boot:run -Dspring-boot.run.profiles=dev -Dmaven.test.skip=true &
+             
           echo "Waiting for service to start..."
-          for i in {1..30}; do
+          for i in {1..60}; do  # 稍微延长等待时间到 60次
             if curl -s http://localhost:8080/v3/api-docs > openapi.json; then
               if [ -s openapi.json ]; then
                 echo "✅ OpenAPI JSON generated successfully!"
+          
+                # 2. 【核心修改】把生成的 JSON 打印出来，让我们看看它肚子里到底是新代码还是旧代码
+                echo "====== DEBUG START: openapi.json content ======"
+                cat openapi.json
+                echo "====== DEBUG END ======"
+               
                 exit 0
               fi
             fi
@@ -65,7 +70,6 @@ jobs:
           done
           echo "❌ Failed to generate OpenAPI JSON"
           exit 1
-
       # 4. 推送到 Apifox
       - name: Upload to Apifox
         working-directory: ./backend
