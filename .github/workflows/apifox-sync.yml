@@ -1,5 +1,5 @@
 name: Sync API Docs to Apifox
-
+# 触发条件：当 master 或 main 分支有代码 push 时触发
 on:
   push:
     branches:
@@ -7,8 +7,12 @@ on:
 
 jobs:
   update-apifox-docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # 使用 Ubuntu 虚拟系统
 
+    # 【知识点 1】服务容器
+    # 因为 SpringBoot 启动需要连数据库，但 GitHub 的虚拟机里没有 MySQL。
+
+    # 所以我们在这里临时起一个 MySQL 和 Redis 给它连。
     services:
       mysql:
         image: mysql:8.0
@@ -27,9 +31,11 @@ jobs:
           - 6379:6379
 
     steps:
+      - # 1. 下载你的代码
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2. 设置 JDK 17
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
@@ -37,10 +43,15 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # 3. 启动 Spring Boot 并生成 OpenAPI JSON
+      # 这里用了一个技巧：让程序在后台运行，然后用 curl 抓取 JSON
       - name: Generate OpenAPI JSON
-        working-directory: ./backend
+        working-directory: ./backend # 进入后端目录
         run: |
+          # 后台启动应用，忽略测试 ( & 表示后台运行 )
           mvn spring-boot:run -Dspring-boot.run.profiles=dev -Dmaven.test.skip=true &
+          
+          # 循环等待服务启动（每 5 秒试一次，最多试 30 次）
           echo "Waiting for service to start..."
           for i in {1..30}; do
             if curl -s http://localhost:8080/v3/api-docs > openapi.json; then
@@ -55,11 +66,13 @@ jobs:
           echo "❌ Failed to generate OpenAPI JSON"
           exit 1
 
+      # 4. 推送到 Apifox
       - name: Upload to Apifox
         working-directory: ./backend
         run: |
+          # 调用 Apifox 的官方 API 上传文件
           curl --location --request POST "https://api.apifox.cn/api/v1/projects/${{ secrets.APIFOX_PROJECT_ID }}/import-openapi?token=${{ secrets.APIFOX_TOKEN }}" \
           --header 'Content-Type: multipart/form-data' \
           --form 'file=@"openapi.json"' \
-          --form 'options={"overwrite":true}'
+          --form 'options={"overwrite":true}' # 覆盖旧文档
           echo "🎉 Docs synced to Apifox!"
