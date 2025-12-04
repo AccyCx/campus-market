@@ -38,3 +38,9 @@ services:
 
   # --- RocketMQ 和 ElasticSearch 先注释掉，等讲到那个阶段再开启，节省内存 ---
   # 后续我们会在这里添加 broker, nameserver, kibana 等配置
+
+
+
+
+
+  
