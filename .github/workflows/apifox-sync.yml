@@ -70,9 +70,10 @@ jobs:
       - name: Upload to Apifox
         working-directory: ./backend
         run: |
-          # 调用 Apifox 的官方 API 上传文件
-          curl --location --request POST "https://api.apifox.cn/api/v1/projects/${{ secrets.APIFOX_PROJECT_ID }}/import-openapi?token=${{ secrets.APIFOX_TOKEN }}" \
-          --header 'Content-Type: multipart/form-data' \
-          --form 'file=@"openapi.json"' \
-          --form 'options={"overwrite":true}' # 覆盖旧文档
+          # 注意：URL 里去掉了多余的 /api，并且改用了 Authorization 头
+          curl --location --request POST "https://api.apifox.cn/v1/projects/${{ secrets.APIFOX_PROJECT_ID }}/import-openapi" \
+          --header "Authorization: Bearer ${{ secrets.APIFOX_TOKEN }}" \
+          --header "X-Apifox-Version: 2024-03-28" \
+          --form "file=@openapi.json" \
+          --form "options={\"overwrite\":true}"
           echo "🎉 Docs synced to Apifox!"
