@@ -74,16 +74,15 @@ jobs:
       - name: Upload to Apifox
         working-directory: ./backend
         run: |
-          echo "🚀 Starting upload via Apifox CLI..."
-  
-          # 使用 npx 直接运行 apifox-cli (Ubuntu环境自带Node.js，无需安装)
-          # -t: Token
-          # -p: Project ID
-          # -b: Branch (默认 main)
-          # --verbose: 打印详细日志
-          npx apifox-cli upload openapi.json \
-            -t ${{ secrets.APIFOX_TOKEN }} \
-            -p ${{ secrets.APIFOX_PROJECT_ID }} \
-            --verbose
-  
-          echo "🎉 Upload command finished!"
+          echo "🚀 Uploading to Apifox via curl..."
+          
+          # 【关键修改】在文件名后面加上 ;type=application/json
+          # 这会告诉 Apifox 服务器：我传的是 JSON，请解析它！不要忽略它！
+          curl --location --request POST "https://api.apifox.cn/v1/projects/${{ secrets.APIFOX_PROJECT_ID }}/import-openapi" \
+          --header "Authorization: Bearer ${{ secrets.APIFOX_TOKEN }}" \
+          --header "X-Apifox-Version: 2024-03-28" \
+          --form "file=@openapi.json;type=application/json" \
+          --form "options={\"overwrite\":true}" \
+          --fail 
+          
+          echo "🎉 Upload finished successfully!"
