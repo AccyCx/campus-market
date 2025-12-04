@@ -74,10 +74,22 @@ jobs:
       - name: Upload to Apifox
         working-directory: ./backend
         run: |
-          # 注意：URL 里去掉了多余的 /api，并且改用了 Authorization 头
-          curl --location --request POST "https://api.apifox.cn/v1/projects/${{ secrets.APIFOX_PROJECT_ID }}/import-openapi" \
-          --header "Authorization: Bearer ${{ secrets.APIFOX_TOKEN }}" \
-          --header "X-Apifox-Version: 2024-03-28" \
-          --form "file=@openapi.json" \
-          --form "options={\"overwrite\":true}"
-          echo "🎉 Docs synced to Apifox!"
+          # 使用最新的Apifox API端点和格式
+          response=$(curl --location --request POST "https://api.apifox.com/v1/projects/${{ secrets.APIFOX_PROJECT_ID }}/openapi-import" \
+            --header "Authorization: Bearer ${{ secrets.APIFOX_TOKEN }}" \
+            --header "Content-Type: application/json" \
+            --data "{
+              \"openapi_content\": $(cat openapi.json | jq -Rs .),
+              \"format\": \"json\"
+            }")
+
+          echo "Response: $response"
+
+          # 检查响应状态
+          if echo "$response" | grep -q '"success":true\|"status":"success"'; then
+            echo "🎉 Docs synced to Apifox successfully!"
+          else
+            echo "❌ Failed to sync docs to Apifox"
+            echo "Error response: $response"
+            exit 1
+          fi
