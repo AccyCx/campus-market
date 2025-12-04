@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/test")
 public class HelloController {
 
-    @Operation(summary = "打招呼接口 V2.0", description = "返回 Hello World,这是测试自动化的版本")
+    @Operation(summary = "打招呼接口 V2.0", description = "返回 Hello World,这是自动化测试的版本")
     @GetMapping("/hello")
     public String sayHello() {
         return "Hello, Campus Market!";
